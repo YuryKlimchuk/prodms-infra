@@ -103,3 +103,64 @@ stringData:
   password: mongodb-pwd
 
 ```
+
+
+# kafka for warehouse
+
+1. Install operator 
+
+```bash
+
+kubectl create namespace kafka-operator
+kubectl create -f 'https://strimzi.io/install/latest?namespace=kafka-operator' -n kafka-operator
+```
+
+3. Apply new CR
+
+```yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: prodms-kafka-cluster
+  namespace: prodms-infra
+spec:
+  kafka:
+    version: 3.9.0
+    replicas: 1
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+      - name: external
+        port: 9094
+        type: nodeport
+        tls: false
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
+      inter.broker.protocol.version: "3.9"
+    storage:
+      type: jbod
+      volumes:
+        - id: 0
+          type: persistent-claim
+          size: 1Gi
+          deleteClaim: false
+  zookeeper:
+    replicas: 1
+    storage:
+      type: persistent-claim
+      size: 1Gi
+      deleteClaim: false
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+```

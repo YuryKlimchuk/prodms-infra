@@ -20,7 +20,7 @@ spec:
           db: warehouse
         - name: userAdminAnyDatabase
           db: warehouse
-      scramCredentialsSecretName: my-scram
+      scramCredentialsSecretName: mongodb-creds-details
   additionalMongodConfig:
     storage.wiredTiger.engineConfig.journalCompressor: zlib
   statefulSet:

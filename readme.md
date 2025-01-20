@@ -87,9 +87,29 @@ spec:
           db: warehouse
         - name: userAdminAnyDatabase
           db: warehouse
-      scramCredentialsSecretName: my-scram
+      scramCredentialsSecretName: mongodb-creds-details
   additionalMongodConfig:
     storage.wiredTiger.engineConfig.journalCompressor: zlib
+  statefulSet:
+    spec:
+      volumeClaimTemplates:
+        - metadata:
+            name: data-volume
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 1Gi
+        - metadata:
+            name: logs-volume
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 1Gi
+
 
 # the user credentials will be generated from this secret
 # once the credentials are generated, this secret is no longer required
@@ -98,9 +118,67 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: prodms-mongo-db-creds
+  namespace: prodms-infra
 type: Opaque
 stringData:
   password: mongodb-pwd
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mongodb-database
+  namespace: prodms-infra
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mongodb-database
+  namespace: prodms-infra
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - patch
+      - delete
+      - get
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mongodb-database
+  namespace: prodms-infra
+subjects:
+  - kind: ServiceAccount
+    name: mongodb-database
+roleRef:
+  kind: Role
+  name: mongodb-database
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-external-svc
+  namespace: prodms-infra
+  labels:
+    app: prodms-mongodb-svc
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 27017
+      protocol: TCP
+      nodePort: 32017
+  selector:
+    app: prodms-mongodb-svc
 
 ```
 

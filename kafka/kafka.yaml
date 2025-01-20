@@ -1,12 +1,38 @@
+
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: prodms-kafka-cluster-dual-role
+  namespace: prodms-infra
+  labels:
+    strimzi.io/cluster: prodms-kafka-cluster
+spec:
+  replicas: 1
+  roles:
+    - controller
+    - broker
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 1Gi
+        deleteClaim: false
+        kraftMetadata: shared
+---
+
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
   name: prodms-kafka-cluster
   namespace: prodms-infra
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
 spec:
   kafka:
     version: 3.9.0
-    replicas: 1
+    metadataVersion: 3.9-IV0
     listeners:
       - name: plain
         port: 9092
@@ -26,110 +52,20 @@ spec:
       transaction.state.log.min.isr: 1
       default.replication.factor: 1
       min.insync.replicas: 1
-      inter.broker.protocol.version: "3.9"
-    storage:
-      type: jbod
-      volumes:
-        - id: 0
-          type: persistent-claim
-          size: 1Gi
-          deleteClaim: false
-  zookeeper:
-    replicas: 1
-    storage:
-      type: persistent-claim
-      size: 1Gi
-      deleteClaim: false
   entityOperator:
-    topicOperator: {}
-    userOperator: {}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: strimzi-cluster-operator
-  namespace: prodms-infra
-  labels:
-    app: strimzi
-subjects:
-  - kind: ServiceAccount
-    name: strimzi-cluster-operator
-    namespace: kafka-operator
-roleRef:
-  kind: ClusterRole
-  name: strimzi-cluster-operator-namespaced
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: strimzi-cluster-operator-watched
-  namespace: prodms-infra
-  labels:
-    app: strimzi
-subjects:
-  - kind: ServiceAccount
-    name: strimzi-cluster-operator
-    namespace: kafka-operator
-roleRef:
-  kind: ClusterRole
-  name: strimzi-cluster-operator-watched
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: strimzi-entity-operator
-  namespace: prodms-infra
-  labels:
-    app: strimzi
-rules:
-  - apiGroups:
-      - "kafka.strimzi.io"
-    resources:
-      # The Entity Operator contains the Topic Operator which needs to access and manage KafkaTopic resources
-      - kafkatopics
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - patch
-      - update
-      - delete
-  - apiGroups:
-      - "kafka.strimzi.io"
-    resources:
-      # The Entity Operator contains the User Operator which needs to access and manage KafkaUser resources
-      - kafkausers
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - patch
-      - update
-  - apiGroups:
-      - "kafka.strimzi.io"
-    resources:
-      # The Entity Operator contains the Topic Operator which needs to access and manage KafkaTopic resources
-      - kafkatopics/status
-      # The Entity Operator contains the User Operator which needs to access and manage KafkaUser resources
-      - kafkausers/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - ""
-    resources:
-      # The entity operator user-operator needs to access and manage secrets to store generated credentials
-      - secrets
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - delete
-      - patch
-      - update
+    topicOperator:
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 100m
+        limits:
+          memory: 512Mi
+          cpu: 250m
+    userOperator:
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 75m
+        limits:
+          memory: 512Mi
+          cpu: 250m

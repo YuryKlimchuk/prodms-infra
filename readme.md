@@ -103,3 +103,90 @@ stringData:
   password: mongodb-pwd
 
 ```
+
+# kafka for warehouse
+
+1. Install operator
+
+```bash
+
+helm install strimzi-kafka-cluster-operator oci://quay.io/strimzi-helm/strimzi-kafka-operator --namespace kafka-operator --create-namespace \
+--set=watchAnyNamespace=true
+```
+
+2. Apply CRs
+
+```yaml
+
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: prodms-kafka-cluster-dual-role
+  namespace: prodms-infra
+  labels:
+    strimzi.io/cluster: prodms-kafka-cluster
+spec:
+  replicas: 1
+  roles:
+    - controller
+    - broker
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 1Gi
+        deleteClaim: false
+        kraftMetadata: shared
+---
+
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: prodms-kafka-cluster
+  namespace: prodms-infra
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+spec:
+  kafka:
+    version: 3.9.0
+    metadataVersion: 3.9-IV0
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+      - name: external
+        port: 9094
+        type: nodeport
+        tls: false
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
+  entityOperator:
+    topicOperator:
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 100m
+        limits:
+          memory: 512Mi
+          cpu: 250m
+    userOperator:
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 75m
+        limits:
+          memory: 512Mi
+          cpu: 250m
+```

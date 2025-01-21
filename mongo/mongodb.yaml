@@ -20,6 +20,16 @@ spec:
           db: admin
         - name: userAdminAnyDatabase
           db: admin
+        - name: dbOwner
+          db: admin
+        - name: dbOwner
+          db: warehouse
+        - name: clusterAdmin
+          db: warehouse
+        - name: userAdminAnyDatabase
+          db: warehouse
+        - name: dbAdmin
+          db: warehouse
       scramCredentialsSecretName: mongodb-creds-details
   additionalMongodConfig:
     storage.wiredTiger.engineConfig.journalCompressor: zlib

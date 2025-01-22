@@ -268,3 +268,48 @@ spec:
           memory: 512Mi
           cpu: 250m
 ```
+
+
+# Minio for files
+
+1. Add helm repository
+
+```bash
+
+helm repo add minio-operator https://operator.min.io
+```
+
+2. Install chart for operator
+
+```bash
+
+helm install \
+  --namespace minio-operator \
+  --create-namespace \
+  minio-operator-release minio-operator/operator \
+  --set operator.replicaCount=1
+```
+
+3. Verify installation
+
+```bash
+
+kubectl get pods -n minio-operator --watch
+```
+
+4. Install tenant chart
+
+```bash
+
+helm install \
+--namespace prodms-infra \
+--create-namespace \
+prodms-minio-release \
+minio-operator/tenant \
+--set tenant.name=prodms-minio \
+--set tenant.pools[0].servers=1 \
+--set tenant.pools[0].name=minio-pool-0 \
+--set tenant.pools[0].volumesPerServer=1 \
+--set tenant.pools[0].size="1Gi" \
+--set tenant.certificate.requestAutoCert=false
+```

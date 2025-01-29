@@ -313,3 +313,26 @@ minio-operator/tenant \
 --set tenant.pools[0].size="1Gi" \
 --set tenant.certificate.requestAutoCert=false
 ```
+
+5. Add initial data
+
+```bash
+
+kubectl exec --namespace prodms-infra prodms-minio-minio-pool-0-0 -it -- bash
+
+cat <<'EOF' >> /tmp/test__as.txt
+Content of tmp/test__as.txt file...
+EOF
+cat <<'EOF' >> /tmp/test__si.txt
+Content of tmp/test__si.txt file...
+EOF
+cat <<'EOF' >> /tmp/test__ov.txt
+Content of tmp/test__ov.txt file...
+EOF
+
+mc config host add minio http://localhost:9000 minio minio123 > /dev/null
+mc cp --tags="type=as" tmp/test__as.txt minio/drawing-bucket/test__as.txt > /dev/null
+mc cp --tags="type=si" tmp/test__si.txt minio/drawing-bucket/test__si.txt > /dev/null
+mc cp --tags="type=ov" tmp/test__ov.txt minio/drawing-bucket/test__ov.txt > /dev/null
+exit 0
+```

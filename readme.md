@@ -57,7 +57,7 @@ helm repo add mongodb https://mongodb.github.io/helm-charts
 ```bash
 
 helm install community-operator mongodb/community-operator --namespace mongodb-operator --create-namespace \
---set operator.watchNamespace="prodms-infra"
+--set operator.watchNamespace="prodms"
 ```
 
 3. Load yaml
@@ -331,8 +331,19 @@ Content of tmp/test__ov.txt file...
 EOF
 
 mc config host add minio http://localhost:9000 minio minio123 > /dev/null
-mc cp --tags="type=as" tmp/test__as.txt minio/drawing-bucket/test__as.txt > /dev/null
-mc cp --tags="type=si" tmp/test__si.txt minio/drawing-bucket/test__si.txt > /dev/null
-mc cp --tags="type=ov" tmp/test__ov.txt minio/drawing-bucket/test__ov.txt > /dev/null
+mc cp --tags="type=as" tmp/test__as.txt minio/drawings-bucket/test__as.txt > /dev/null
+mc cp --tags="type=si" tmp/test__si.txt minio/drawings-bucket/test__si.txt > /dev/null
+mc cp --tags="type=ov" tmp/test__ov.txt minio/drawings-bucket/test__ov.txt > /dev/null
 exit 0
+```
+
+
+# postgres for tech
+
+```bash
+helm upgrade --install prodms-postgres-tech --namespace prodms --create-namespace cnpg/cluster \
+--set cluster.storage.size="1Gi" \
+--set cluster.initdb.database="tech" \
+--set cluster.instances=1 \
+--set cluster.initdb.owner="pg-user"
 ```

@@ -1,7 +1,7 @@
 apiVersion: mongodbcommunity.mongodb.com/v1
 kind: MongoDBCommunity
 metadata:
-  namespace: prodms-infra
+  namespace: prodms
   name: prodms-mongodb
 spec:
   members: 1
@@ -61,7 +61,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: prodms-mongodb-creds
-  namespace: prodms-infra
+  namespace: prodms
 type: Opaque
 stringData:
   password: mongodb-pwd
@@ -70,13 +70,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: mongodb-database
-  namespace: prodms-infra
+  namespace: prodms
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: mongodb-database
-  namespace: prodms-infra
+  namespace: prodms
 rules:
   - apiGroups:
       - ""
@@ -97,7 +97,7 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: mongodb-database
-  namespace: prodms-infra
+  namespace: prodms
 subjects:
   - kind: ServiceAccount
     name: mongodb-database
@@ -110,7 +110,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mongodb-external-svc
-  namespace: prodms-infra
+  namespace: prodms
   labels:
     app: prodms-mongodb-svc
 spec:
